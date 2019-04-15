@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 import os
 import re
-import tsfresh.feature_extraction.feature_calculators as feature_cal
+import tsfresh.feature_extraction.feature_calculators as fc
 
 def parse_args(argv):
 	if len(sys.argv) > 2:
@@ -36,62 +36,36 @@ def extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive):
 			raw_abspath_F = raw_data_F_map[device]
 			df_B = pd.read_csv(raw_abspath_B, header = 0)
 			df_F = pd.read_csv(raw_abspath_F, header = 0)
-			features = [0] * (44 + 1)
+			features = [0] * (16 + 1)
 
 			df_B_0 = df_B[df_B.columns[0]]
 			df_B_1 = df_B[df_B.columns[1]]
-			features[0] = df_B_0.mean()
-			features[1] = df_B_0.std()
-			features[2] = df_B_0.median()
-			features[3] = df_B_0.mad()
-			features[4] = df_B_0.skew()
-			features[5] = df_B_0.kurtosis()
-			features[6] = df_B_0.max() - df_B_0.min()
-			features[7] = feature_cal.absolute_sum_of_changes(df_B_0)
-                        features[8] = feature_cal.autocorrelation(df_B_0, 100)
-                        features[9] = feature_cal.binned_entropy(df_B_0, 100)
-                        features[10] = feature_cal.abs_energy(df_B_0)
-
-			features[11] = df_B_1.mean()
-			features[12] = df_B_1.std()
-			features[13] = df_B_1.median()
-			features[14] = df_B_1.mad()
-			features[15] = df_B_1.skew()
-			features[16] = df_B_1.kurtosis()
-                        features[17] = df_B_1.max() - df_B_1.min()
-			features[18] = feature_cal.absolute_sum_of_changes(df_B_1)
-                        features[19] = feature_cal.autocorrelation(df_B_1, 100)
-                        features[20] = feature_cal.binned_entropy(df_B_1, 100)
-                        features[21] = feature_cal.abs_energy(df_B_1)
+                        fs_B_0 = fc.fft_coefficient(df_B_0, param=[{"coeff":10, 'attr':'real'}, {"coeff":10, "attr":"imag"}, {"coeff":10, "attr":"abs"}, {"coeff":10, "attr":"angle"}])
+                        fs_B_1 = fc.fft_coefficient(df_B_1, param=[{"coeff":10, 'attr':'real'}, {"coeff":10, "attr":"imag"}, {"coeff":10, "attr":"abs"}, {"coeff":10, "attr":"angle"}])
+                       
+			features[0] = fs_B_0[0][1]
+			features[1] = fs_B_0[1][1]
+                        features[2] = fs_B_0[2][1]
+                        features[3] = fs_B_0[3][1]
+			features[4] = fs_B_1[0][1]
+			features[5] = fs_B_1[1][1]
+                        features[6] = fs_B_1[2][1]
+                        features[7] = fs_B_1[3][1]
 
 			df_F_0 = df_F[df_F.columns[0]]
 			df_F_1 = df_F[df_F.columns[1]]
+                        fs_F_0 = fc.fft_coefficient(df_F_0, param=[{"coeff":10, 'attr':'real'}, {"coeff":10, "attr":"imag"}, {"coeff":10, "attr":"abs"}, {"coeff":10, "attr":"angle"}])
+                        fs_F_1 = fc.fft_coefficient(df_F_1, param=[{"coeff":10, 'attr':'real'}, {"coeff":10, "attr":"imag"}, {"coeff":10, "attr":"abs"}, {"coeff":10, "attr":"angle"}])
+ 			features[8] = fs_F_0[0][1]
+			features[9] = fs_F_0[1][1]
+                        features[10] = fs_F_0[2][1]
+                        features[11] = fs_F_0[3][1]
+			features[12] = fs_F_1[0][1]
+			features[13] = fs_F_1[1][1]
+                        features[14] = fs_F_1[2][1]
+                        features[15] = fs_F_1[3][1]
 
-			features[22] = df_F_0.mean()
-			features[23] = df_F_0.std()
-			features[24] = df_F_0.median()
-			features[25] = df_F_0.mad()
-			features[26] = df_F_0.skew()
-			features[27] = df_F_0.kurtosis()
-                        features[28] = df_F_0.max() - df_F_0.min()
-			features[29] = feature_cal.absolute_sum_of_changes(df_F_0)
-                        features[30] = feature_cal.autocorrelation(df_F_0, 100)
-                        features[31] = feature_cal.binned_entropy(df_F_0, 100)
-                        features[32] = feature_cal.abs_energy(df_F_0)
-
-			features[33] = df_F_1.mean()
-			features[34] = df_F_1.std()
-			features[35] = df_F_1.median()
-			features[36] = df_F_1.mad()
-			features[37] = df_F_1.skew()
-			features[38] = df_F_1.kurtosis()
-	                features[39] = df_F_1.max() - df_F_1.min()
-			features[40] = feature_cal.absolute_sum_of_changes(df_F_1)
-                        features[41] = feature_cal.autocorrelation(df_F_1, 100)
-                        features[42] = feature_cal.binned_entropy(df_F_1, 100)
-                        features[43] = feature_cal.abs_energy(df_F_1)
-
-			features[44] = device
+			features[16] = device
 			all_features.append(features)
 			process_counter = process_counter + 1
 			print "progress device %s:%.2f%%, %d in %d" % (device, process_counter * 100.0 / unprocess_size, process_counter, unprocess_size)
