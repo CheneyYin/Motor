@@ -4,10 +4,10 @@ from sklearn.ensemble import GradientBoostingClassifier
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
-train_N_path = '../data/Features/train_N.csv'
-train_P_path = '../data/Features/train_P.csv'
-test_path = '../data/Features/test.csv'
-sub_path = '../data/Features/sub_GBRTShuffle.csv'
+train_N_path = 'D:\\train_N.csv'
+train_P_path = 'D:\\train_P.csv'
+test_path = 'D:\\test.csv'
+sub_path = 'D:\\sub_GBRTShuffle.csv'
 
 train_N_df = pd.read_csv(train_N_path, header = 0)
 train_P_df = pd.read_csv(train_P_path, header = 0)
@@ -50,13 +50,13 @@ p_proba = est.predict_proba(test_df[filter_features])
 
 
 #print p_proba
-#pp = []
-#for p in p_proba:
-    #pp.append(p[1])
-    #print p[1]
-#result_df = pd.DataFrame(pp)
-#plt.show(result_df.plot(kind = 'kde'))
-#plt.show()
+pp = []
+for p in p_proba:
+    pp.append(p[1])
+#    print p[1]
+result_df = pd.DataFrame(pp)
+plt.show(result_df.plot(kind = 'kde'))
+plt.show()
 #1.98166168718218e-06
 #2.12271060222556E-06
 #2.48371253016666E-06 fail

@@ -25,7 +25,7 @@ def parse_args(argv):
 def extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive):
 	all_features = list()
 
-	feature_titles = range(44 + 1)
+	feature_titles = range(48 + 1)
 	unprocess_size = len(device_set)
 	process_counter = 0
 	print "progress:%.2f%%, %d in %d" % (process_counter * 100.0 / unprocess_size, process_counter, unprocess_size)
@@ -36,7 +36,7 @@ def extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive):
 			raw_abspath_F = raw_data_F_map[device]
 			df_B = pd.read_csv(raw_abspath_B, header = 0)
 			df_F = pd.read_csv(raw_abspath_F, header = 0)
-			features = [0] * (44 + 1)
+			features = [0] * (48 + 1)
 
 			df_B_0 = df_B[df_B.columns[0]]
 			df_B_1 = df_B[df_B.columns[1]]
@@ -90,8 +90,12 @@ def extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive):
                         features[41] = feature_cal.autocorrelation(df_F_1, 100)
                         features[42] = feature_cal.binned_entropy(df_F_1, 100)
                         features[43] = feature_cal.abs_energy(df_F_1)
+                        features[44] = feature_cal.number_peaks(df_B_0, 1000)
+                        features[45] = feature_cal.number_peaks(df_B_1, 1000)
+                        features[46] = feature_cal.number_peaks(df_F_0, 1000)
+                        features[47] = feature_cal.number_peaks(df_F_1, 1000)
 
-			features[44] = device
+			features[48] = device
 			all_features.append(features)
 			process_counter = process_counter + 1
 			print "progress device %s:%.2f%%, %d in %d" % (device, process_counter * 100.0 / unprocess_size, process_counter, unprocess_size)

@@ -4,10 +4,12 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import SVC
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import cross_val_score, ShuffleSplit, cross_validate
-train_N_path = '../Motor-Data1/train_N.csv'
-train_P_path = '../Motor-Data1/train_P.csv'
-test_path = '../Motor-Data1/test.csv'
-sub_path = '../Motor-Data1/sub.csv'
+from sklearn.utils import shuffle
+
+train_N_path = 'D:\\train_N.csv'
+train_P_path = 'D:\\train_P.csv'
+test_path = 'D:\\test.csv'
+sub_path = 'D:\\sub.csv'
 
 train_N_df = pd.read_csv(train_N_path, header = 0)
 train_P_df = pd.read_csv(train_P_path, header = 0)
@@ -19,6 +21,7 @@ for i in range(16):
         train_df = pd.concat([train_df, train_P_df], axis = 0)
 
 #filter_features = [train_N_df.columns[idx] for idx in [2, 5, 8, 10, 11, 21, 22, 24, 29]]
+shuffle(train_df)
 
 clf_lgbm = LGBMClassifier(boosting_type='gbdt', \
                           num_leaves=51, \
@@ -40,21 +43,21 @@ clf_lgbm = LGBMClassifier(boosting_type='gbdt', \
                           importance_type='gain', \
                           silent=True)
 sscv = ShuffleSplit(n_splits = 10, test_size = 0.25, random_state = None)
-clf_lgbm.fit(train_df[train_df.columns[0:44]], train_df[train_df.columns[45]])
-print clf_lgbm.score(train_df[train_df.columns[0:44]], train_df[train_df.columns[45]])
+clf_lgbm.fit(train_df[train_df.columns[0:48]], train_df[train_df.columns[49]])
+print clf_lgbm.score(train_df[train_df.columns[0:48]], train_df[train_df.columns[49]])
 
-p_proba = clf_lgbm.predict_proba(test_df[test_df.columns[0:44]])
+p_proba = clf_lgbm.predict_proba(test_df[test_df.columns[0:48]])
 print p_proba
 
 #0.005
-p_list = [1 if p[1] > 0.005 else 0 for p in p_proba]
+p_list = [1 if p[1] > 0.0056 else 0 for p in p_proba]
 print p_list
-#test_pred_df = clf_lgbm.predict(test_df[test_df.columns[0:44]])
-#res = pd.DataFrame(data = np.column_stack([np.reshape(test_df[test_df.columns[44]], test_size), test_pred_df]), columns = ['idx','result'])
-res = pd.DataFrame(data = np.column_stack([np.reshape(test_df[test_df.columns[44]], test_size), p_list]), columns = ['idx','result'])
+#test_pred_df = clf_lgbm.predict(test_df[test_df.columns[0:48]])
+#res = pd.DataFrame(data = np.column_stack([np.reshape(test_df[test_df.columns[48]], test_size), test_pred_df]), columns = ['idx','result'])
+res = pd.DataFrame(data = np.column_stack([np.reshape(test_df[test_df.columns[48]], test_size), p_list]), columns = ['idx','result'])
 res.to_csv(sub_path, index = False)
 
-scores = cross_validate(clf_lgbm, train_df[train_df.columns[0:44]], train_df[train_df.columns[45]], cv=sscv, scoring=['precision_macro', 'recall_macro'], return_train_score=False)
+scores = cross_validate(clf_lgbm, train_df[train_df.columns[0:48]], train_df[train_df.columns[49]], cv=sscv, scoring=['precision_macro', 'recall_macro'], return_train_score=False)
 print scores
 #print clf_lgbm.predict(train_P_df[train_P_df.columns[0:40]])
 #print clf_lgbm.predict(train_N_df[train_N_df.columns[0:40]])
