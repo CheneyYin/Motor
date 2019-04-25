@@ -1,162 +1,112 @@
+# -*- coding: utf-8 -*-
+"""
+-------------------------------------------------
+   File Name  :    transform
+   Author     :    雨住风停松子落
+   E-mail     :
+   date       :    2019/4/25
+   Description:
+                包含两个函数：extract_feature 和 transform_all_data，详细注释见函数内
+-------------------------------------------------
+   Change Activity:
+                   2019/4/25:
+-------------------------------------------------
+"""
+__author__ = '雨住风停松子落'
+
 import numpy as np
 import pandas as pd
-import sys
 import os
-import re
 import tsfresh.feature_extraction.feature_calculators as feature_cal
 
-def parse_args(argv):
-	if len(sys.argv) > 2:
-		raw_path = sys.argv[1]
-		dest_file_path = sys.argv[2]
-		isPostive = None
-		if len(sys.argv) > 3:
-			if sys.argv[3] == 'P':
-				isPostive = True
-			elif sys.argv[3] == 'N':
-				isPostive = False
-			else:
-				isPostive = None
-		return (raw_path, dest_file_path, isPostive)
-	else:
-		print "Please input raw data path and transformed data file path."
-        exit(1)
-
-def extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive):
-	all_features = list()
-
-	feature_titles = range(44 + 1)
-	unprocess_size = len(device_set)
-	process_counter = 0
-	print "progress:%.2f%%, %d in %d" % (process_counter * 100.0 / unprocess_size, process_counter, unprocess_size)
-
-	for device in device_set:
-		if raw_data_B_map.has_key(device) and raw_data_F_map.has_key(device):
-			raw_abspath_B = raw_data_B_map[device]
-			raw_abspath_F = raw_data_F_map[device]
-			df_B = pd.read_csv(raw_abspath_B, header = 0)
-			df_F = pd.read_csv(raw_abspath_F, header = 0)
-			features = [0] * (44 + 1)
-
-			df_B_0 = df_B[df_B.columns[0]]
-			df_B_1 = df_B[df_B.columns[1]]
-			features[0] = df_B_0.mean()
-			features[1] = df_B_0.std()
-			features[2] = df_B_0.median()
-			features[3] = df_B_0.mad()
-			features[4] = df_B_0.skew()
-			features[5] = df_B_0.kurtosis()
-			features[6] = df_B_0.max() - df_B_0.min()
-			features[7] = feature_cal.absolute_sum_of_changes(df_B_0)
-                        features[8] = feature_cal.autocorrelation(df_B_0, 100)
-                        features[9] = feature_cal.binned_entropy(df_B_0, 100)
-                        features[10] = feature_cal.abs_energy(df_B_0)
-
-			features[11] = df_B_1.mean()
-			features[12] = df_B_1.std()
-			features[13] = df_B_1.median()
-			features[14] = df_B_1.mad()
-			features[15] = df_B_1.skew()
-			features[16] = df_B_1.kurtosis()
-                        features[17] = df_B_1.max() - df_B_1.min()
-			features[18] = feature_cal.absolute_sum_of_changes(df_B_1)
-                        features[19] = feature_cal.autocorrelation(df_B_1, 100)
-                        features[20] = feature_cal.binned_entropy(df_B_1, 100)
-                        features[21] = feature_cal.abs_energy(df_B_1)
-
-			df_F_0 = df_F[df_F.columns[0]]
-			df_F_1 = df_F[df_F.columns[1]]
-
-			features[22] = df_F_0.mean()
-			features[23] = df_F_0.std()
-			features[24] = df_F_0.median()
-			features[25] = df_F_0.mad()
-			features[26] = df_F_0.skew()
-			features[27] = df_F_0.kurtosis()
-                        features[28] = df_F_0.max() - df_F_0.min()
-			features[29] = feature_cal.absolute_sum_of_changes(df_F_0)
-                        features[30] = feature_cal.autocorrelation(df_F_0, 100)
-                        features[31] = feature_cal.binned_entropy(df_F_0, 100)
-                        features[32] = feature_cal.abs_energy(df_F_0)
-
-			features[33] = df_F_1.mean()
-			features[34] = df_F_1.std()
-			features[35] = df_F_1.median()
-			features[36] = df_F_1.mad()
-			features[37] = df_F_1.skew()
-			features[38] = df_F_1.kurtosis()
-	                features[39] = df_F_1.max() - df_F_1.min()
-			features[40] = feature_cal.absolute_sum_of_changes(df_F_1)
-                        features[41] = feature_cal.autocorrelation(df_F_1, 100)
-                        features[42] = feature_cal.binned_entropy(df_F_1, 100)
-                        features[43] = feature_cal.abs_energy(df_F_1)
-
-			features[44] = device
-			all_features.append(features)
-			process_counter = process_counter + 1
-			print "progress device %s:%.2f%%, %d in %d" % (device, process_counter * 100.0 / unprocess_size, process_counter, unprocess_size)
-		else:
-			print "Please check raw data file about device %s, it should be include 2 files(B and F)." % (device)
-			exit(1)
-	return (feature_titles, all_features)
-
-def main(raw_path, dest_file_path, isPostive):
-	raw_abspaths = list()
-
-	if isPostive is None:
-		target = None
-	else:
-		if isPostive:
-			target = 1
-		else:
-			target = 0
-
-	if os.path.exists(raw_path):
-		if os.path.isfile(raw_path):
-			raw_abspaths.append(os.path.abspath(raw_path))
-		if os.path.isdir(raw_path):
-			for sub_raw_path in os.listdir(raw_path):
-				raw_abspaths.append(os.path.abspath(raw_path + '/' + sub_raw_path))
-
-	raw_data_B_map = dict()
-	raw_data_F_map = dict()
-	device_set = set()
-
-	file_regx = '([0-9a-zA-Z\-]+)_([BF]{1})\.csv'
-	for raw_abspath in raw_abspaths:
-		filename = os.path.basename(raw_abspath)
-		file_detail = re.findall(file_regx, filename)
-		direct = file_detail[0][1]
-		device = file_detail[0][0]
-
-		print 'direct:%s, device:%s' % (direct, device)
-		device_set.add(device)
-		if direct == 'B':
-			raw_data_B_map[device] = raw_abspath
-		if direct == 'F':
-			raw_data_F_map[device] = raw_abspath
-
-	print "device total: %d" % (len(device_set))
-	features = extract_features(device_set, raw_data_B_map, raw_data_F_map, isPostive)
-	feature_titles = features[0]
-	feature_data = features[1]
-
-	if target is None:
-		pass
-	else:
-		feature_titles.append('qualified')
-
-	feature_np_array = np.array(feature_data)
-	if target is None:
-		feature_target_np_array = feature_np_array
-	else:
-		target_np_arrray = np.array([target for i in range(len(feature_data))], dtype = 'int64')
-		feature_target_np_array = np.column_stack([feature_np_array, target_np_arrray])
-
-	feature_df = pd.DataFrame(data = feature_target_np_array, columns = feature_titles)
-	feature_df.to_csv(dest_file_path, index = False)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
-if __name__ == '__main__':
-    argvs = parse_args(sys.argv)
-    main(raw_path = argvs[0], dest_file_path = argvs[1], isPostive = argvs[2])
+def extract_feature(filename, isPositive=None):
+    '''
+    提取单个样本
+    :param filename: 单个电机的F方向数据名
+    :param isPositive: Node 未知， True 正样本， False 负样本
+    :return: 0-43 常规特征44个, 44-47 number_peaks特征4个, 48-51 agg_autocorrelation特征4个,
+             52-67 ratio_beyond_r_sigma特征16个, 68-83 fft_coefficient特征16个, 84 电机编号, 85 target
+    '''
+
+    dfF = pd.read_csv(filename, header=0, names=['ai1f', 'ai2f'])
+    dfB = pd.read_csv(filename.replace('_F', '_B'), header=0, names=['ai1b', 'ai2b'])
+    df = pd.concat([dfB, dfF], axis=1)
+
+    feature = []
+
+    for col in df.columns:
+        t_df = df[col]
+        feature.append(t_df.mean())
+        feature.append(t_df.std())
+        feature.append(t_df.median())
+        feature.append(t_df.mad())
+        feature.append(t_df.skew())
+        feature.append(t_df.kurtosis())
+        feature.append(t_df.max() - t_df.min())
+        feature.append(feature_cal.absolute_sum_of_changes(t_df))
+        feature.append(feature_cal.autocorrelation(t_df, 100))
+        feature.append(feature_cal.binned_entropy(t_df, 100))
+        feature.append(feature_cal.abs_energy(t_df))
+
+    for col in df.columns:
+        feature.append(feature_cal.number_peaks(df[col], 1000))
+
+    param = [{'f_agg': 'mean', 'maxlag': 2}]
+    for col in df.columns:
+        feature.append(feature_cal.agg_autocorrelation(df[col], param)[0][1])
+
+    for pp in range(2, 6):
+        for col in df.columns:
+            feature.append(feature_cal.ratio_beyond_r_sigma(df[col], pp))
+
+    param = [{"coeff": 10, 'attr': 'real'}, {"coeff": 10, "attr": "imag"},
+             {"coeff": 10, "attr": "abs"}, {"coeff": 10, "attr": "angle"}]
+    # TODO fft修改成numpy.fft可能更快
+    for col in df.columns:
+        fft = feature_cal.fft_coefficient(df[col], param)
+        for i in range(4):
+            feature.append(fft[i][1])
+
+    if isPositive is None:
+        target = None
+    else:
+        if isPositive:
+            target = 1
+        else:
+            target = 0
+
+    feature.append(filename[-42: -6])
+    feature.append(target)
+
+    return feature
+
+
+def transform_all_data(dataPath, destPath, mode='train'):
+    '''
+    提取所有样本
+    :param dataPath: 数据源文件夹
+    :param destPath: 提取的特征保存文件夹
+    :param mode:     train or test
+    :return: None
+    '''
+    features = []
+    idx = 0
+
+    saved_path = 'train_features.csv' if mode == 'train' else 'test_features.csv'
+
+    for fpathe, dirs, fs in os.walk(dataPath):
+        for f in fs:
+            if f[-6:] == '_F.csv':
+                filename = os.path.join(fpathe, f).replace('\\', '/')
+                if mode == 'train':
+                    features.append(extract_feature(filename, isPositive=('Positive' in filename)))
+                else:
+                    features.append(extract_feature(filename))
+                print(idx, filename)
+                idx = idx + 1
+
+    df = pd.DataFrame(data=np.array(features))
+    df.to_csv(os.path.join(destPath, saved_path).replace('\\', '/'), index=False)
