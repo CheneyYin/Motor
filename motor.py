@@ -22,7 +22,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.neural_network import MLPClassifier
+# from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
@@ -49,16 +49,9 @@ def build_model(data, mode='train'):
                          [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27,
                           28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43]]
     filter_features_3 = [data.columns[idx] for idx in
-                         [0, 1, 2, 3, 4, 5, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 26, 27, 28, 29,
-                          31, 33, 34, 35, 36, 37, 38, 39, 42,
-                          # 44, 45, 46, 47,
-                          48, 49, 50, 51, 52, 53, 54, 55]]
-    filter_features_4 = [data.columns[idx] for idx in
                          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                          26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 48, 49, 50, 51, 52,
-                          53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-                          # 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83
-                          ]]
+                          26, 27,
+                          28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]]
     if mode == 'train':
         ada_clf = AdaBoostClassifier(
             RandomForestClassifier(n_estimators=60, max_depth=13, min_samples_split=5,
@@ -83,23 +76,19 @@ def build_model(data, mode='train'):
             min_child_weight=0.001, min_child_samples=20, subsample=1.0, subsample_freq=0, colsample_bytree=1.0,
             reg_alpha=3.5, reg_lambda=1.0, random_state=None, importance_type='gain', silent=True
         )
-        mlp_clf = MLPClassifier(
-            solver='lbfgs', activation='logistic', alpha=1e-2, learning_rate='adaptive',
-            hidden_layer_sizes=(2048, 67, 2), random_state=1, max_iter=5000, verbose=10, learning_rate_init=0.01
-        )
         vote_clf = VotingClassifier(
             estimators=[
                 (
                     'LogisticRegression',
-                    LogisticRegression(penalty='l2', solver='lbfgs', verbose=0, class_weight='balanced')
+                    LogisticRegression(penalty='l2', solver='lbfgs', verbose=0)
                 ),
                 (
-                    'DecisionTreeClassifier', DecisionTreeClassifier(class_weight='balanced')
+                    'DecisionTreeClassifier', DecisionTreeClassifier()
                 ),
                 (
                     'RandomForestClassifier', RandomForestClassifier(
                         n_estimators=60, max_depth=13, min_samples_split=5, min_samples_leaf=20,
-                        oob_score=True, random_state=0, class_weight='balanced')
+                        oob_score=True, random_state=0)
                 ),
                 ('GradientBoostingClassifier', GradientBoostingClassifier(n_estimators=1200, verbose=0)),
                 ('GaussianNB', GaussianNB()),
@@ -117,20 +106,18 @@ def build_model(data, mode='train'):
             'AdaBoostClassifier': [ada_clf, filter_features_1],
             'BaggingClassifier': [bag_clf, filter_features_1],
             'GradientBoostingClassifier': [gbdt_clf, filter_features_2],
-            'LGBMClassifier': [lgbm_clf, filter_features_2],
-            'MLPClassifier': [mlp_clf, filter_features_3],
+            'LGBMClassifier': [lgbm_clf, filter_features_3],
             'VotingClassifier': [vote_clf, filter_features_1],
-            'XGBClassifier': [xgb_clf, filter_features_4],
+            'XGBClassifier': [xgb_clf, filter_features_1],
         }
     elif mode == 'test':
         clfs = {
             'AdaBoostClassifier': filter_features_1,
             'BaggingClassifier': filter_features_1,
             'GradientBoostingClassifier': filter_features_2,
-            'LGBMClassifier': filter_features_2,
-            'MLPClassifier': filter_features_3,
+            'LGBMClassifier': filter_features_3,
             'VotingClassifier': filter_features_1,
-            'XGBClassifier': filter_features_4,
+            'XGBClassifier': filter_features_1,
         }
     else:
         raise Exception("mode must be train or test !!")
@@ -151,13 +138,13 @@ def train(train_data, savedPath, upsampling):
         for i in range(upsampling[clf_name] - 1):
             trainData = pd.concat([trainData, train_data.tail(30)], axis=0)
 
-        print trainData.shape
+        if clf_name != 'VotingClassifier':
+            print 'shuffle'
+            trainData = shuffle(trainData)
+        trainData.dropna(inplace=True)
+        clf.fit(trainData[filter_features], trainData[train_data.columns[45]])
 
-        trainData = shuffle(trainData)
-
-        clf.fit(trainData[filter_features], trainData[train_data.columns[85]])
-
-        print(clf_name, '\t', clf.score(train_data[filter_features], train_data[train_data.columns[85]]))
+        print(clf_name, '\t', clf.score(train_data[filter_features], train_data[train_data.columns[45]]))
         joblib.dump(clf, savedPath + clf_name + '.pkl')
 
 
@@ -186,7 +173,7 @@ def test(test_data, modelPath, savedPath, threshold):
         idx = idx + 1
 
     res_df = pd.DataFrame(data=np.column_stack(
-        [np.reshape(test_data[test_data.columns[84]], int(test_data[test_data.columns[0]].count())), result]),
+        [np.reshape(test_data[test_data.columns[44]], int(test_data[test_data.columns[0]].count())), result]),
         columns=['idx', 'result'])
 
     res_df.to_csv(savedPath, index=False)

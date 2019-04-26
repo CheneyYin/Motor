@@ -30,6 +30,7 @@ def extract_feature(filename, isPositive=None):
     :param isPositive: Node 未知， True 正样本， False 负样本
     :return: 0-43 常规特征44个, 44-47 number_peaks特征4个, 48-51 agg_autocorrelation特征4个,
              52-67 ratio_beyond_r_sigma特征16个, 68-83 fft_coefficient特征16个, 84 电机编号, 85 target
+             从效率考虑，去除了44之后的特征
     '''
 
     dfF = pd.read_csv(filename, header=0, names=['ai1f', 'ai2f'])
@@ -54,26 +55,22 @@ def extract_feature(filename, isPositive=None):
 
     # for col in df.columns:
     #     feature.append(feature_cal.number_peaks(df[col], 1000))
-    for i in range(4):
-        feature.append(0)
 
-    param = [{'f_agg': 'mean', 'maxlag': 2}]
-    for col in df.columns:
-        feature.append(feature_cal.agg_autocorrelation(df[col], param)[0][1])
-
-    for pp in range(2, 6):
-        for col in df.columns:
-            feature.append(feature_cal.ratio_beyond_r_sigma(df[col], pp))
-
+    # param = [{'f_agg': 'mean', 'maxlag': 2}]
+    # for col in df.columns:
+    #     feature.append(feature_cal.agg_autocorrelation(df[col], param)[0][1])
+    #
+    # for pp in range(2, 6):
+    #     for col in df.columns:
+    #         feature.append(feature_cal.ratio_beyond_r_sigma(df[col], pp))
+    #
     # param = [{"coeff": 10, 'attr': 'real'}, {"coeff": 10, "attr": "imag"},
-    #          {"coeff": 10, "attr": "abs"}, {"coeff": 10, "attr": "angle"}]
-    # # TODO fft修改成numpy.fft可能更快
+    #         {"coeff": 10, "attr": "abs"}, {"coeff": 10, "attr": "angle"}]
+    #
     # for col in df.columns:
     #     fft = feature_cal.fft_coefficient(df[col], param)
     #     for i in range(4):
     #         feature.append(fft[i][1])
-    for i in range(16):
-        feature.append(0)
 
     if isPositive is None:
         target = None

@@ -21,17 +21,16 @@ if __name__ == '__main__':
         'AdaBoostClassifier': 0.55,
         'BaggingClassifier': 0.55,
         'GradientBoostingClassifier': 0.55,
-        'LGBMClassifier': 0.45,
-        'MLPClassifier': 0.8,
+        'LGBMClassifier': 0.55,
         'VotingClassifier': 0.5,
         'XGBClassifier': 0.39,
     }
+
     upsampling = {
         'AdaBoostClassifier': 1,
         'BaggingClassifier': 1,
         'GradientBoostingClassifier': 16,
         'LGBMClassifier': 16,
-        'MLPClassifier': 1,
         'VotingClassifier': 16,
         'XGBClassifier': 1,
     }
@@ -45,7 +44,7 @@ if __name__ == '__main__':
 
     SUBMISSION_PATH = 'submission.csv'
 
-    if len(os.listdir(MIDEL_SAVED_PATH)) != 7:
+    if len(os.listdir(MIDEL_SAVED_PATH)) != 6:
         if not os.path.isfile(TRAIN_FEATURES_PATH):
             transform_all_data(TRAIN_DATA_PATH, FEATURE_PATH, mode='train')
 
