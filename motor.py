@@ -29,6 +29,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from xgboost import XGBClassifier
 from sklearn.externals import joblib
+from sklearn.utils import shuffle
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -49,11 +50,15 @@ def build_model(data, mode='train'):
                           28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43]]
     filter_features_3 = [data.columns[idx] for idx in
                          [0, 1, 2, 3, 4, 5, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 26, 27, 28, 29,
-                          31, 33, 34, 35, 36, 37, 38, 39, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]]
+                          31, 33, 34, 35, 36, 37, 38, 39, 42,
+                          # 44, 45, 46, 47,
+                          48, 49, 50, 51, 52, 53, 54, 55]]
     filter_features_4 = [data.columns[idx] for idx in
                          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                          26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 68, 69, 70, 71, 72,
-                          73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]]
+                          26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 48, 49, 50, 51, 52,
+                          53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                          # 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83
+                          ]]
     if mode == 'train':
         ada_clf = AdaBoostClassifier(
             RandomForestClassifier(n_estimators=60, max_depth=13, min_samples_split=5,
@@ -133,7 +138,7 @@ def build_model(data, mode='train'):
     return clfs
 
 
-def train(train_data, savedPath):
+def train(train_data, savedPath, upsampling):
     '''
     训练
     :param train_data:
@@ -142,7 +147,15 @@ def train(train_data, savedPath):
     '''
     clfs = build_model(train_data, mode='train')
     for clf_name, [clf, filter_features] in clfs.items():
-        clf.fit(train_data[filter_features], train_data[train_data.columns[85]])
+        trainData = train_data
+        for i in range(upsampling[clf_name] - 1):
+            trainData = pd.concat([trainData, train_data.tail(30)], axis=0)
+
+        print trainData.shape
+
+        trainData = shuffle(trainData)
+
+        clf.fit(trainData[filter_features], trainData[train_data.columns[85]])
 
         print(clf_name, '\t', clf.score(train_data[filter_features], train_data[train_data.columns[85]]))
         joblib.dump(clf, savedPath + clf_name + '.pkl')
@@ -163,7 +176,9 @@ def test(test_data, modelPath, savedPath, threshold):
     for clf_name, filter_features in clfs.items():
         clf = joblib.load(modelPath + clf_name + '.pkl')
         p_proba = clf.predict_proba(test_data[filter_features])
-        p_list = [1 if p[1] > threshold[clf_name] else 0 for p in p_proba]
+        p_list_midl = [p[1] for p in p_proba]
+        p_list_midl.sort(reverse=True)
+        p_list = [1 if p[1] > p_list_midl[int(len(p_list_midl) * threshold[clf_name])] else 0 for p in p_proba]
         if idx == 0:
             result = p_list
         else:
@@ -175,3 +190,4 @@ def test(test_data, modelPath, savedPath, threshold):
         columns=['idx', 'result'])
 
     res_df.to_csv(savedPath, index=False)
+    print("done!")

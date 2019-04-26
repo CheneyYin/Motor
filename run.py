@@ -15,17 +15,25 @@ __author__ = '雨住风停松子落'
 
 from transform import *
 from motor import *
-from sklearn.utils import shuffle
 
 if __name__ == '__main__':
     thod = {
-        'AdaBoostClassifier': 0.25,
-        'BaggingClassifier': 0.25,
-        'GradientBoostingClassifier': 0.25,
-        'LGBMClassifier': 0.25,
-        'MLPClassifier': 0.25,
-        'VotingClassifier': 0.25,
-        'XGBClassifier': 0.25,
+        'AdaBoostClassifier': 0.55,
+        'BaggingClassifier': 0.55,
+        'GradientBoostingClassifier': 0.55,
+        'LGBMClassifier': 0.45,
+        'MLPClassifier': 0.8,
+        'VotingClassifier': 0.5,
+        'XGBClassifier': 0.39,
+    }
+    upsampling = {
+        'AdaBoostClassifier': 1,
+        'BaggingClassifier': 1,
+        'GradientBoostingClassifier': 16,
+        'LGBMClassifier': 16,
+        'MLPClassifier': 1,
+        'VotingClassifier': 16,
+        'XGBClassifier': 1,
     }
 
     TRAIN_DATA_PATH = 'D:/workspace/MotorData/Motor_tain/'
@@ -42,9 +50,7 @@ if __name__ == '__main__':
             transform_all_data(TRAIN_DATA_PATH, FEATURE_PATH, mode='train')
 
         train_df = pd.read_csv(TRAIN_FEATURES_PATH, header=0)
-        train_df.dropna(inplace=True)
-        train_df = shuffle(train_df)
-        train(train_df, MIDEL_SAVED_PATH)
+        train(train_df, MIDEL_SAVED_PATH, upsampling)
 
     if not os.path.isfile(TEST_FEATURES_PATH):
         transform_all_data(TEST_DATA_PATH, FEATURE_PATH, mode='test')

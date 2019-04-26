@@ -17,6 +17,7 @@ __author__ = '雨住风停松子落'
 import numpy as np
 import pandas as pd
 import os
+import time
 import tsfresh.feature_extraction.feature_calculators as feature_cal
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -51,8 +52,10 @@ def extract_feature(filename, isPositive=None):
         feature.append(feature_cal.binned_entropy(t_df, 100))
         feature.append(feature_cal.abs_energy(t_df))
 
-    for col in df.columns:
-        feature.append(feature_cal.number_peaks(df[col], 1000))
+    # for col in df.columns:
+    #     feature.append(feature_cal.number_peaks(df[col], 1000))
+    for i in range(4):
+        feature.append(0)
 
     param = [{'f_agg': 'mean', 'maxlag': 2}]
     for col in df.columns:
@@ -62,13 +65,15 @@ def extract_feature(filename, isPositive=None):
         for col in df.columns:
             feature.append(feature_cal.ratio_beyond_r_sigma(df[col], pp))
 
-    param = [{"coeff": 10, 'attr': 'real'}, {"coeff": 10, "attr": "imag"},
-             {"coeff": 10, "attr": "abs"}, {"coeff": 10, "attr": "angle"}]
-    # TODO fft修改成numpy.fft可能更快
-    for col in df.columns:
-        fft = feature_cal.fft_coefficient(df[col], param)
-        for i in range(4):
-            feature.append(fft[i][1])
+    # param = [{"coeff": 10, 'attr': 'real'}, {"coeff": 10, "attr": "imag"},
+    #          {"coeff": 10, "attr": "abs"}, {"coeff": 10, "attr": "angle"}]
+    # # TODO fft修改成numpy.fft可能更快
+    # for col in df.columns:
+    #     fft = feature_cal.fft_coefficient(df[col], param)
+    #     for i in range(4):
+    #         feature.append(fft[i][1])
+    for i in range(16):
+        feature.append(0)
 
     if isPositive is None:
         target = None
@@ -100,12 +105,14 @@ def transform_all_data(dataPath, destPath, mode='train'):
     for fpathe, dirs, fs in os.walk(dataPath):
         for f in fs:
             if f[-6:] == '_F.csv':
+                t0 = time.time()
                 filename = os.path.join(fpathe, f).replace('\\', '/')
                 if mode == 'train':
                     features.append(extract_feature(filename, isPositive=('Positive' in filename)))
                 else:
                     features.append(extract_feature(filename))
-                print(idx, filename)
+                t1 = time.time()
+                print(idx, filename, 'time: ', t1 - t0)
                 idx = idx + 1
 
     df = pd.DataFrame(data=np.array(features))
