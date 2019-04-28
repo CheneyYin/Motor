@@ -49,6 +49,7 @@ if __name__ == '__main__':
             transform_all_data(TRAIN_DATA_PATH, FEATURE_PATH, mode='train')
 
         train_df = pd.read_csv(TRAIN_FEATURES_PATH, header=0)
+        train_df.dropna(inplace=True)
         train(train_df, MIDEL_SAVED_PATH, upsampling)
 
     if not os.path.isfile(TEST_FEATURES_PATH):

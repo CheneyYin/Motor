@@ -141,7 +141,7 @@ def train(train_data, savedPath, upsampling):
         if clf_name != 'VotingClassifier':
             print 'shuffle'
             trainData = shuffle(trainData)
-        trainData.dropna(inplace=True)
+        # trainData.dropna(inplace=True)
         clf.fit(trainData[filter_features], trainData[train_data.columns[45]])
 
         print(clf_name, '\t', clf.score(train_data[filter_features], train_data[train_data.columns[45]]))
