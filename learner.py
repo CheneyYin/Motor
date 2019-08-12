@@ -9,6 +9,7 @@ train_P_path = '../Motor-Data1/train_P.csv'
 test_path = '../Motor-Data1/test.csv'
 sub_path = '../Motor-Data1/sub.csv'
 
+
 train_N_df = pd.read_csv(train_N_path, header = 0)
 train_P_df = pd.read_csv(train_P_path, header = 0)
 test_df = pd.read_csv(test_path, header = 0)
